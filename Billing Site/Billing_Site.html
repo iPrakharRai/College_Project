@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Billing System in India.</title>
+    <link rel="stylesheet" href="billing.css">
+</head>
+<body>
+    <header>
+        <h1>Billing System</h1>
+    </header>
+    <main>
+        <section id="product-entry">
+            <h2>Product Entry</h2>
+            <input type="text" id="product-name" placeholder="Product Name">
+            <input type="number" id="product-price" placeholder="Price">
+            <input type="number" id="product-quantity" placeholder="Quantity">
+            <button onclick="addProduct()">Add Product</button>
+        </section>
+        
+        <section id="invoice">
+            <h2>Invoice</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="invoice-body"></tbody>
+            </table>
+            <h3>Total Amount: <span id="total-amount">0</span></h3>
+            <button onclick="printInvoice()">Print Invoice</button>
+            <button id="logoutButton" onclick="logout()">Logout</button>
+        </section>
+    </main>
+    
+    <script>
+        // Check if the user is logged in
+        if (!localStorage.getItem("loggedIn")) {
+            window.location.href = 'login.html'; // Redirect to login page if not logged in
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem("loggedIn"); // Remove the login status
+            window.location.href = 'login.html'; // Redirect to login page
+        }
+
+        let totalAmount = 0;
+        const products = []; // Array to store product data
+
+        // Add product to invoice
+        function addProduct() {
+            const name = document.getElementById("product-name").value;
+            const price = parseFloat(document.getElementById("product-price").value);
+            const quantity = parseInt(document.getElementById("product-quantity").value);
+            
+            if (name && !isNaN(price) && !isNaN(quantity)) {
+                const total = price * quantity;
+                totalAmount += total;
+                
+                // Store product details in the array
+                const product = {
+                    name: name,
+                    price: price,
+                    quantity: quantity,
+                    total: total
+                };
+                products.push(product);
+                renderInvoice();
+                
+                // Clear input fields
+                document.getElementById("product-name").value = '';
+                document.getElementById("product-price").value = '';
+                document.getElementById("product-quantity").value = '';
+            }
+        }
+
+        // Render invoice table
+        function renderInvoice() {
+            const tableBody = document.getElementById("invoice-body");
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            products.forEach((product, index) => {
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>${product.price}</td>
+                    <td>${product.quantity}</td>
+                    <td>${product.total}</td>
+                    <td>
+                        <button onclick="editProduct(${index})">Edit</button>
+                        <button onclick="removeProduct(${index})">Delete</button>
+                    </td>
+                `;
+            });
+
+            document.getElementById("total-amount").textContent = totalAmount;
+        }
+
+        // Edit product details
+        function editProduct(index) {
+            const product = products[index];
+
+            // Pre-fill the input fields with product data for editing
+            document.getElementById("product-name").value = product.name;
+            document.getElementById("product-price").value = product.price;
+            document.getElementById("product-quantity").value = product.quantity;
+
+            // Remove the old product and update the total amount
+            totalAmount -= product.total;
+            products.splice(index, 1);
+
+            renderInvoice(); // Re-render the invoice table after edit
+        }
+
+        // Remove product from invoice
+        function removeProduct(index) {
+            const product = products[index];
+            totalAmount -= product.total; // Subtract the product's total from the total amount
+            products.splice(index, 1); // Remove product from the array
+            renderInvoice(); // Re-render the invoice table after removal
+        }
+
+        function printInvoice() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
